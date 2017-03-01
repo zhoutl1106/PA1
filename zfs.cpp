@@ -1,4 +1,8 @@
+#include <iostream>
+#include <sstream>
 #include "zfs.h"
+#include <stdlib.h>
+#include <unistd.h>
 
 char blockBuf[BLOCK_NUM][BLOCK_SIZE];
 
@@ -7,12 +11,104 @@ char* buf;
 ZFS::ZFS()
 {
     //    cout<<MAX_BLOCKINDEX_PER_BLOCK<<","<<MAX_DIR_ENTRIES_PER_BLOCK<<","<<MAX_DIR_DIRECT_ENTRIES<<","<<MAX_DIR_FIRST_ENTRYIES<<endl;
-//    cout<<sizeof(FCB)<<endl;
+    //    cout<<sizeof(FCB)<<endl;
 }
 
 ZFS::~ZFS()
 {
 
+}
+
+void ZFS::startServer(int port)
+{
+
+}
+
+void ZFS::run()
+{
+    string line;
+    while(getline(cin,line))
+    {
+        processCmd(line);
+    }
+}
+
+void ZFS::processCmd(string line)
+{
+    string cmd,arg0,arg1;
+    int op0,op1;
+    ZFS zfs;
+    cmd = "";
+    arg0 = arg1 = "";
+    op0 = op1 = -1;
+    istringstream iss(line);
+    iss>>cmd;
+
+    //        cout<<cmd<<","<<iss.str()<<endl;
+    if(cmd == "mkfs")
+        mkfs();
+    else if(cmd == "pwd")
+        pwd();
+    else if(cmd == "open")
+    {
+        iss>>arg0>>arg1;
+        open(arg0,arg1);
+    }
+    else if(cmd == "read")
+    {
+        iss>>op0>>op1;
+        read(op0,op1);
+    }
+    else if(cmd == "write")
+    {
+        iss>>op0;
+        getline(iss,arg0);
+        write(op0,arg0);
+    }
+    else if(cmd == "seek")
+    {
+        iss>>op0>>op1;
+        seek(op0,op1);
+    }
+    else if(cmd == "close")
+    {
+        iss>>op0;
+        close(op0);
+    }
+    else if(cmd == "mkdir")
+    {
+        iss>>arg0;
+        mkdir(arg0);
+    }
+    else if(cmd == "rmdir")
+    {
+        iss>>arg0;
+        rmdir(arg0);
+    }
+    else if(cmd == "cd")
+    {
+        iss>>arg0;
+        cd(arg0);
+    }
+    else if(cmd == "ls")
+        ls();
+    else if(cmd == "cat")
+    {
+        iss>>arg0;
+        cat(arg0);
+    }
+    else if(cmd == "tree")
+        tree();
+    else if(cmd == "import")
+    {
+        iss>>arg0>>arg1;
+        import(arg0,arg1);
+    }
+    else if(cmd == "export")
+    {
+        iss>>arg0>>arg1;
+        exprt(arg0,arg1);
+    }
 }
 
 void ZFS::updatePageNum()
@@ -54,10 +150,10 @@ void ZFS::writeFCB(int block, FCB *p)
 
 void ZFS::writeData(int block, void *p, int len, int blockOffset)
 {
-//    cout<<"  # write data to Block "<<block <<", len = "<<len<<", offset = "<<blockOffset<<endl;
-//    printf("%s, %c, %X, %X %X\n",buf, ((char*)p)[0],((char*)p)[0],blockBuf[block][0],blockBuf[block][1]);
+    //    cout<<"  # write data to Block "<<block <<", len = "<<len<<", offset = "<<blockOffset<<endl;
+    //    printf("%s, %c, %X, %X %X\n",buf, ((char*)p)[0],((char*)p)[0],blockBuf[block][0],blockBuf[block][1]);
     memcpy(blockBuf[block] + blockOffset, p, len);
-//    printf("%X %X\n", blockBuf[block][0],blockBuf[block][1]);
+    //    printf("%X %X\n", blockBuf[block][0],blockBuf[block][1]);
     int offset = block * BLOCK_SIZE;
     fd = fopen("output.img","r+");
     fseek(fd,offset+blockOffset,SEEK_SET);
@@ -161,7 +257,7 @@ void ZFS::open(string name, string flag)
         currentWorkingVFile = findFile(name);
         if(currentWorkingVFile != NULL)
         {
-//            cout<<"open exist file to write"<<endl;
+            //            cout<<"open exist file to write"<<endl;
             VFileOffset = currentWorkingVFile->size;
             updatePageNum();
         }
@@ -189,7 +285,7 @@ void ZFS::open(string name, string flag)
 string ZFS::readData(int block, int len, int offset)
 {
     string ret(blockBuf[block] + offset, len);
-//    cout<<"read Data got "<<ret << " of len " << len<< ", offset "<< offset<<", block "<<block<<endl;
+    //    cout<<"read Data got "<<ret << " of len " << len<< ", offset "<< offset<<", block "<<block<<endl;
     return string(blockBuf[block] + offset, len);
 }
 
@@ -201,7 +297,7 @@ string ZFS::read(int fd, int size)
     if(VFileOffset + size > currentWorkingVFile->size)
     {
         size = currentWorkingVFile->size - VFileOffset;
-//        cout<<"truncate read to "<<size<<endl;
+        //        cout<<"truncate read to "<<size<<endl;
     }
 
     // try read up current page.
@@ -237,7 +333,7 @@ void ZFS::write(int fd, string dat)
 
     dat = dat.substr(p0);
     int len = dat.length();
-//    cout<<"write "<<dat<<", "<<len<<endl;
+    //    cout<<"write "<<dat<<", "<<len<<endl;
     if(currentWorkingVFile->size + len > MAX_DIRECT_DATA)
     {
         cout<<"Write Error: File Size Limition Reached."<<endl;
@@ -248,7 +344,7 @@ void ZFS::write(int fd, string dat)
     // try fill current page;
     if(VFilePageOffset == 0 && len != 0)
     {
-//        cout << "allocate new data block "<<nextNewDataBlock<<endl;
+        //        cout << "allocate new data block "<<nextNewDataBlock<<endl;
         currentWorkingVFile->direct_pointer[VFilePage] = nextNewDataBlock;
         nextNewDataBlock --;
     }
@@ -264,7 +360,7 @@ void ZFS::write(int fd, string dat)
 
     while(len > 0)
     {
-//        cout << "allocate new data block "<<nextNewDataBlock<<endl;
+        //        cout << "allocate new data block "<<nextNewDataBlock<<endl;
         currentWorkingVFile->direct_pointer[VFilePage] = nextNewDataBlock;
         nextNewDataBlock --;
         writeSize = len > BLOCK_SIZE? BLOCK_SIZE:len;
@@ -279,7 +375,7 @@ void ZFS::write(int fd, string dat)
 
 void ZFS::seek(int fd, int offset)
 {
-//    cout<<"seek "<<fd<<","<<offset<<endl;
+    //    cout<<"seek "<<fd<<","<<offset<<endl;
     currentWorkingVFile = BUF2FCB(fd);
     if(offset <= currentWorkingVFile->size)
     {
@@ -307,7 +403,7 @@ void ZFS::insertFCBtoDirBlock(int block, FCB *p)
 {
     FCB* dir = (FCB*)(blockBuf[block]);
 
-//    cout<<"  # insert inode " << p->block<<","<<p->name << " to "<< block<<","<<dir->name<<endl;
+    //    cout<<"  # insert inode " << p->block<<","<<p->name << " to "<< block<<","<<dir->name<<endl;
     dir->size += 1;
     if(dir->size >= MAX_BLOCK_POINTER)
     {
@@ -378,7 +474,7 @@ void ZFS::tree()
 
 void ZFS::import(string src, string dest)
 {
-//    cout<<"import "<<src<<","<<dest<<endl;
+    //    cout<<"import "<<src<<","<<dest<<endl;
     open(dest,"w");
     FILE *fd = fopen(src.c_str(), "r");
     if(fd == NULL)
@@ -396,7 +492,7 @@ void ZFS::import(string src, string dest)
 
 void ZFS::exprt(string src, string dest)
 {
-//    cout<<"exprt "<<src<<","<<dest<<endl;
+    //    cout<<"exprt "<<src<<","<<dest<<endl;
     open(src,"r");
     FILE *fd = fopen(dest.c_str(), "w");
     string ret = read(currentWorkingVFile->block, currentWorkingVFile->size);

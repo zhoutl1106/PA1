@@ -39,6 +39,9 @@ class ZFS
 public:
     ZFS();
     ~ZFS();
+    void startServer(int port);
+    void run();
+    void processCmd(string line);
     void mkfs();
     void pwd();
     void open(string name, string flag);
