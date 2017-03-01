@@ -66,7 +66,7 @@ void mkfs_net::clientConnect(string server, int port)
 
 void mkfs_net::clientSendCmdLine(string line)
 {
-    cout<<"Read to send "<<line<<endl;
+//    cout<<"Read to send "<<line<<endl;
     int length=line.size();
     int ret = send(sock_fd, &length, 4, 0);
 //    cout<<"send len " << ret << endl;
@@ -80,7 +80,7 @@ void mkfs_net::clientWaitRespond()
     int size = 0;
     size = ::recv(sock_fd, plen,4,0);
     int len = *((int*)plen);
-    cout<<"res len "<<len<<endl;
+//    cout<<"res len "<<len<<endl;
     char buf[32];
     string ret;
     while(len > 0)
