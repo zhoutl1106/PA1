@@ -40,7 +40,7 @@ public:
     void mkfs();
     void pwd();
     void open(string name, string flag);
-    void read(int fd, int size);
+    string read(int fd, int size);
     void write(int fd, string dat);
     void seek(int fd, int offset);
     void close(int fd);

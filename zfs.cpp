@@ -193,8 +193,9 @@ string ZFS::readData(int block, int len, int offset)
     return string(blockBuf[block] + offset, len);
 }
 
-void ZFS::read(int fd, int size)
+string ZFS::read(int fd, int size)
 {
+    string ret;
     currentWorkingVFile = BUF2FCB(fd);
 
     if(VFileOffset + size > currentWorkingVFile->size)
@@ -207,7 +208,7 @@ void ZFS::read(int fd, int size)
     int pageremain = BLOCK_SIZE - VFilePageOffset;
     int readSize = size > pageremain? pageremain:size;
 
-    cout<<readData(currentWorkingVFile->direct_pointer[VFilePage],readSize,VFilePageOffset);
+    ret += readData(currentWorkingVFile->direct_pointer[VFilePage],readSize,VFilePageOffset);
 
     VFileOffset += readSize;
     updatePageNum();
@@ -217,12 +218,13 @@ void ZFS::read(int fd, int size)
     while(size > 0)
     {
         readSize = size > BLOCK_SIZE? BLOCK_SIZE:size;
-        cout<<readData(currentWorkingVFile->direct_pointer[VFilePage],readSize,VFilePageOffset);
+        ret += readData(currentWorkingVFile->direct_pointer[VFilePage],readSize,VFilePageOffset);
         size -= readSize;
         VFileOffset += readSize;
         updatePageNum();
     }
-    cout << endl;
+    cout << ret << endl;
+    return ret;
 }
 
 void ZFS::write(int fd, string dat)
@@ -235,7 +237,7 @@ void ZFS::write(int fd, string dat)
 
     dat = dat.substr(p0);
     int len = dat.length();
-    cout<<"write "<<dat<<", "<<len<<endl;
+//    cout<<"write "<<dat<<", "<<len<<endl;
     if(currentWorkingVFile->size + len > MAX_DIRECT_DATA)
     {
         cout<<"Write Error: File Size Limition Reached."<<endl;
@@ -376,10 +378,28 @@ void ZFS::tree()
 
 void ZFS::import(string src, string dest)
 {
-    cout<<"import "<<src<<","<<dest<<endl;
+//    cout<<"import "<<src<<","<<dest<<endl;
+    open(dest,"w");
+    FILE *fd = fopen(src.c_str(), "r");
+    if(fd == NULL)
+        perror("fopen");
+    char buf[1024];
+    int size = 0;
+    while(!feof(fd))
+    {
+        size = fread(buf,1,1024,fd);
+        cout<<"import size "<<size<<endl;
+        write(currentWorkingVFile->block, string(buf,size));
+    }
+    fclose(fd);
 }
 
 void ZFS::exprt(string src, string dest)
 {
-    cout<<"exprt "<<src<<","<<dest<<endl;
+//    cout<<"exprt "<<src<<","<<dest<<endl;
+    open(src,"r");
+    FILE *fd = fopen(dest.c_str(), "w");
+    string ret = read(currentWorkingVFile->block, currentWorkingVFile->size);
+    fwrite(ret.c_str(),currentWorkingVFile->size,1,fd);
+    fclose(fd);
 }
