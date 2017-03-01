@@ -365,6 +365,8 @@ void ZFS::ls()
 void ZFS::cat(string name)
 {
     cout<<"cat "<<name<<endl;
+    open(name,"r");
+    read(currentWorkingVFile->block,currentWorkingVFile->size);
 }
 
 void ZFS::tree()
