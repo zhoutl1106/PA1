@@ -147,7 +147,7 @@ void ZFS::mkfs()
 
 void ZFS::writeFCB(int block, FCB *p)
 {
-    cout<<"  # write FCB to Block "<<block<<endl;
+//    cout<<"  # write FCB to Block "<<block<<endl;
     memcpy(blockBuf[block],p,BLOCK_SIZE);
     int offset = block * BLOCK_SIZE;
     fd = fopen("output.img","r+");
@@ -209,7 +209,7 @@ FCB* ZFS::findPath(string dir)
         }
         string sub = dir.substr(0,dir.find_first_of("/"));
         dir = dir.substr(dir.find_first_of("/")+1);
-        cout<<sub<<"--"<<dir<<endl;
+
         FCB* path = (FCB*)(blockBuf[block]);
         if(sub == ".") continue;
         if(sub == "..")

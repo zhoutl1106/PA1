@@ -11,3 +11,4 @@ mkfs_net : mkfs_net.h
 
 clean:
 	rm *.o
+	rm *.img
