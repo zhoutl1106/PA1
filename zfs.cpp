@@ -21,7 +21,15 @@ ZFS::~ZFS()
 
 void ZFS::startServer(int port)
 {
-
+    net = new mkfs_net;
+    net->serverStart(port);
+    while(1)
+    {
+        string line = net->serverRead();
+        net->serverGrabCout();
+        processCmd(line);
+        net->serverReleaseCoutAndRespond();
+    }
 }
 
 void ZFS::run()

@@ -6,6 +6,7 @@
 #include <string>
 #include <string.h>
 #include <stdlib.h>
+#include "mkfs_net.h"
 using namespace std;
 
 #define BLOCK_SIZE (4096)
@@ -80,6 +81,8 @@ private:
     int VFilePage;
     int VFilePageOffset;
     int VFileOffset;
+
+    mkfs_net *net;
 };
 
 #endif // ZFS_H
