@@ -4,6 +4,8 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <string.h>
+#include <stdlib.h>
 using namespace std;
 
 #define BLOCK_SIZE (4096)
